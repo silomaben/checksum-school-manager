@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import *
+from tkcalendar import Calendar
 from tkinter import messagebox
 import bcrypt
 import sqlite3
@@ -8,6 +9,7 @@ from PIL import Image, ImageTk
 import os
 import datetime
 import pandas as pd
+from datetime import datetime as date_leo
 
 from my_db_functions import *
 
@@ -73,6 +75,13 @@ class TreeViewFilter:
 
         self.order = True
 
+        # create a vertical scroll bar
+        yscrollbar = ttk.Scrollbar(parent, orient=tk.VERTICAL, command=self.tree.yview)
+        yscrollbar.place(x=685,y=72)
+
+        # connect the scroll bar to the treeview
+        self.tree.configure(yscrollcommand=yscrollbar.set)
+
 
 
     def populate_treeview(self):
@@ -84,8 +93,10 @@ class TreeViewFilter:
             for row in cursor.execute(
                     f"SELECT studentID, Lastname, Firstname, Middlename, Gender, Age, GuardianFirstName,GuardianLastName FROM {table_name[0]}"):
                 parent_name = (row[6] + " " + row[7])
+                print(f"table is >> {table_name}")
                 # calculate the DOB
                 dob = datetime.datetime.strptime(row[5], "%d-%B-%Y").date()
+                print(f"row is >> {row[5]}")
                 age = datetime.datetime.now().year - dob.year
 
                 values = (row[0], row[1], row[2], row[3], row[4], age, table_name[0], parent_name)
@@ -340,7 +351,7 @@ class Lobby(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
-        def access_create_event(page):
+        def access_page(page):
             if User.privilege == "admin":
                 controller.show_frame(page)
 
@@ -354,10 +365,10 @@ class Lobby(tk.Frame):
             home_btn["image"] = gohomeicon
 
         def on_enter1(e):
-            manage_btn["image"] = examinationBtnHover
+            examination_btn["image"] = examinationBtnHover
 
         def on_leave1(e):
-            manage_btn["image"] = examinationicon
+            examination_btn["image"] = examinationicon
 
         def on_enter2(e):
             library_btn["image"] = libraryBtnHover
@@ -386,17 +397,17 @@ class Lobby(tk.Frame):
         main_bg_label.place(x=0, y=0)
 
         home_btn = tk.Button(mainframe, image=gohomeicon, bg="#7b8c9a", borderwidth=0,
-                             command=lambda: access_create_event(MainPage))
+                             command=lambda: access_page(MainPage))
         home_btn.image = gohomeicon
         home_btn.place(x=170, y=190)
 
-        manage_btn = tk.Button(mainframe, image=examinationicon, bg="#7b8c9a", borderwidth=0,
-                               command=lambda: controller.show_frame(Library))
-        manage_btn.image = examinationicon
-        manage_btn.place(x=170, y=290)
+        examination_btn = tk.Button(mainframe, image=examinationicon, bg="#7b8c9a", borderwidth=0,
+                                    command=lambda: controller.show_frame(Examination))
+        examination_btn.image = examinationicon
+        examination_btn.place(x=170, y=290)
 
         library_btn = tk.Button(mainframe, image=libraryicon, bg="#7b8c9a", borderwidth=0,
-                                command=lambda: access_create_event(Lobby))
+                                command=lambda: access_page(Lobby))
         library_btn.image = libraryicon
         library_btn.place(x=170, y=390)
 
@@ -408,8 +419,8 @@ class Lobby(tk.Frame):
         home_btn.bind("<Enter>", on_enter)
         home_btn.bind("<Leave>", on_leave)
 
-        manage_btn.bind("<Enter>", on_enter1)
-        manage_btn.bind("<Leave>", on_leave1)
+        examination_btn.bind("<Enter>", on_enter1)
+        examination_btn.bind("<Leave>", on_leave1)
 
         library_btn.bind("<Enter>", on_enter2)
         library_btn.bind("<Leave>", on_leave2)
@@ -423,13 +434,13 @@ class MainPage(tk.Frame):
 
         def toggle_button(self):
             if self.studentpage == 'view':
-                indicate(self.toggle_option, self.view_students, new_student)
+                indicate(self.toggle_option, self.view_students, new_student,True)
                 # print(f'should go to {self.studentpage} student')
                 self.studentpage = 'add'
                 # print(self.studentpage)
                 return
             if self.studentpage == 'add':
-                indicate(self.toggle_option, self.add_student, students)
+                indicate(self.toggle_option, self.add_student, students,True)
                 # print(f'should go to {self.studentpage} student')
                 self.studentpage = 'view'
                 # print(self.studentpage)
@@ -443,6 +454,9 @@ class MainPage(tk.Frame):
 
             controller.show_frame(Lobby)
             for frame in contentframe.winfo_children():
+                frame.destroy()
+            hide_indicators()
+            for frame in pageframe.winfo_children():
                 frame.destroy()
 
 
@@ -562,6 +576,8 @@ class MainPage(tk.Frame):
                 else:
                     label.config(text=text)
 
+
+
             #######################################################################################################
             reg_form_bg = ImageTk.PhotoImage(Image.open('final_event/images/student reg form.png'))
 
@@ -586,6 +602,10 @@ class MainPage(tk.Frame):
             guardianPhone.insert(0, "Guardian phone number here")
             currentClass.insert(0, "Current class here")
 
+            current_date = date_leo.now().strftime('%d-%m-%Y')
+
+            enrollmentDate.insert(0, current_date)
+
 
 
             firstName.place(x=49,y=62)
@@ -596,6 +616,8 @@ class MainPage(tk.Frame):
             guardianPhone.place(x=520, y=250)
             currentClass.place(x=49, y=346)
             enrollmentDate.place(x=284, y=346)
+
+
 
             gender = StringVar()
 
@@ -611,9 +633,9 @@ class MainPage(tk.Frame):
             spinbox_year.place(x=625, y=157)
 
             month=StringVar()
-            search_values = ['January', 'February','March','April','June']  ##########################use the classes db to populate
-            class_combobox = AutocompleteCombobox(contentframe, width=9,textvariable=month)
-            class_combobox.set_completion_list(search_values)
+            search_values = ['January', 'February','March','April','May','June','July','August','September','October','November','December']  ##########################use the classes db to populate
+            class_combobox = ttk.Combobox(contentframe, width=9,textvariable=month,values=search_values)
+            # class_combobox.set_completion_list(search_values)
             class_combobox.place(x=497, y=155)
 
 
@@ -634,9 +656,9 @@ class MainPage(tk.Frame):
             guardianPhoneLabel = tk.Label(contentframe, text='', bg="#eeeeee", fg='#6a6a6a')
             currentClassLabel = tk.Label(contentframe, text='', bg="#eeeeee", fg='#6a6a6a')
             enrolmentDateLabel = tk.Label(contentframe, text='~enrollment_date~', bg="#eeeeee", fg='#6a6a6a')
-            dateLabel = tk.Label(contentframe, text='', bg="#eeeeee", fg='#6a6a6a')
-            monthLabel = tk.Label(contentframe, text='', bg="#eeeeee", fg='#6a6a6a')
-            yearLabel = tk.Label(contentframe, text='', bg="#eeeeee", fg='#6a6a6a')
+            dateLabel = tk.Label(contentframe, text='date', bg="#eeeeee", fg='#6a6a6a')
+            monthLabel = tk.Label(contentframe, text='month', bg="#eeeeee", fg='#6a6a6a')
+            yearLabel = tk.Label(contentframe, text='year', bg="#eeeeee", fg='#6a6a6a')
             genderLabel = tk.Label(contentframe, text='Gender', bg='#eeeeee',fg='#6a6a6a').place(x=127, y=130)
 
             fNameLabel.place(x=49, y=30)
@@ -647,15 +669,96 @@ class MainPage(tk.Frame):
             guardianPhoneLabel.place(x=520, y=218)
             currentClassLabel.place(x=49, y=314)
             enrolmentDateLabel.place(x=284, y=314)
-            dateLabel.place(x=393, y=130)
-            monthLabel.place(x=497, y=130)
-            yearLabel.place(x=625, y=130)
+            dateLabel.place(x=393, y=125)
+            monthLabel.place(x=497, y=125)
+            yearLabel.place(x=625, y=125)
+            # # show_calender
+            # def show_calendar():
+            #     global cal  # make the calendar variable global so that it can be accessed and destroyed later
+            #
+            #     if button["text"] == "Choose Date":
+            #         button["text"] = "Hide Calendar"
+            #
+            #         cal = Calendar(contentframe, selectmode="day", year=2023, month=8, day=10, width=80, height=70)
+            #         cal.place(x=400, y=100)
+            #
+            #     else:
+            #         button["text"] = "Choose Date"
+            #         cal.place_forget()
+            #         # cal.destroy()
+            #         print("cal destroyed")
+            #
+            # button = tk.Button(contentframe, text="Choose Date", command=show_calendar)
+            # button.place(x=400,y=390)
 
-            age = date.get() + "-" + month.get() + "-" + year.get()
+
+            def submit_func():
+                # Define a function to remove the label
+                def remove_label():
+                    message.destroy()
+                    firstName.delete(0, tk.END)
+                    middleName.delete(0, tk.END)
+                    lastName.delete(0, tk.END)
+                    guardianFName.delete(0, tk.END)
+                    guardianLName.delete(0, tk.END)
+                    guardianPhone.delete(0, tk.END)
+                    currentClass.delete(0, tk.END)
+                    enrollmentDate.delete(0, tk.END)
+
+
+                    spinbox_date.config(from_=1, to=10, value=5)
+                    spinbox_year.config(from_=2000, to=2030, value=2001)
+                    current_date = date_leo.now().strftime('%d-%m-%Y')
+                    enrollmentDate.insert(0, current_date)
+                    class_combobox.set("January")
+
+                def validate_date(date):
+                    if len(date) != 10:  # Check if the input has the correct length
+                        return False
+                    if not date[0:2].isdigit() or not date[3:5].isdigit() or not date[6:10].isdigit():  # Check if the digits are in the correct places
+                        return False
+                    if date[2] != '-' or date[5] != '-':  # Check if the spaces are in the correct places
+                        return False
+                    return True
+
+                age = date.get() + "-" + month.get() + "-" + year.get()
+
+                date_today = enrollmentDate.get()
+                if validate_date(date_today):
+                    # Date is valid, do something with it
+                    print(f"valid date: {date_today}")
+                else:
+                    # Date is not valid, show an error message
+                    print("Invalid date")
+                    messagebox.showerror("Wrong Date formatting!",
+                                         "Put enrollment date as dd-mm-yyyy where date(dd), month(mm),year(yyyy)")
+                    return
 
 
 
-            submit= tk.Button(contentframe,text='submit',command=lambda:add_student(firstName.get(),middleName.get(),lastName.get(),guardianFName.get(),guardianLName.get(),guardianPhone.get(),currentClass.get(),enrollmentDate.get(),gender.get(),age))
+
+
+                response=add_student(firstName.get(), middleName.get(), lastName.get(), guardianFName.get(),
+                             guardianLName.get(), guardianPhone.get(), currentClass.get(), enrollmentDate.get(),
+                             gender.get(), age)
+
+                message=tk.Label(contentframe, text=response)
+                message.place(x=550,y=400)
+
+                # Use the after method to schedule the remove_label function to be called after 4 seconds
+                # if response!="Please fill in all the fields":
+                contentframe.after(3000, remove_label)
+
+
+
+
+
+
+
+
+
+
+            submit= tk.Button(contentframe,text='submit',command=lambda:submit_func())
             submit.place(x=550, y=346)
 
 
@@ -702,7 +805,7 @@ class MainPage(tk.Frame):
             teachers_button['image'] = teachers_icon
 
         def delete_page(button):
-            button=str(button)
+            # button=str(button)
 
             for frame in contentframe.winfo_children():
                 frame.destroy()
@@ -713,11 +816,11 @@ class MainPage(tk.Frame):
 
 
 
-        def indicate(button_pressed, button, page):
-            # print(button_pressed)
-            # maintains students button selection
-            if str(button_pressed) != '.!frame.!mainpage.!frame2.!button3' and str(button_pressed) != '.!frame.!mainpage.!frame2.!button5':
-                hide_indicators()
+        def indicate(button_pressed, button, page,show):
+
+            if not show:
+               hide_indicators()
+
             button_pressed["image"] = button
             delete_page(button_pressed)
             page(self, contentframe)
@@ -787,22 +890,22 @@ class MainPage(tk.Frame):
 
         home_button = tk.Button(buttonsframe, image=home_icon, bg="#7b8c9a", borderwidth=0,
                                 command=lambda: indicate(home_button, home_icon_select,
-                                                         home_window))
+                                                         home_window,False))
         home_button.image = home_icon
         home_button.pack(pady=10)
 
         students_button = tk.Button(buttonsframe, image=students_icon, bg="#7b8c9a", borderwidth=0,
                                     command=lambda: indicate(students_button, students_icon_select,
-                                                             students))
+                                                             students,False))
         students_button.image = students_icon
         students_button.pack(pady=10)
 
         teachers_button = tk.Button(buttonsframe, image=teachers_icon, bg="#7b8c9a", borderwidth=0,
-                                    command=lambda: indicate(teachers_button, teachers_icon_select, teachers))
+                                    command=lambda: indicate(teachers_button, teachers_icon_select, teachers,False))
         teachers_button.image = teachers_icon
         teachers_button.pack(pady=10)
 
-        classes_button = tk.Button(buttonsframe, image=classes_icon, bg="#7b8c9a", borderwidth=0, command=lambda: indicate(classes_button, classes_icon_select, classes))
+        classes_button = tk.Button(buttonsframe, image=classes_icon, bg="#7b8c9a", borderwidth=0, command=lambda: indicate(classes_button, classes_icon_select, classes,False))
         classes_button.image = classes_icon
         classes_button.pack(pady=10)
 
@@ -821,12 +924,85 @@ class MainPage(tk.Frame):
         logout.place(x=65, y=5)
 
         indicate(home_button, home_icon_select,
-                 home_window)
+                 home_window, False)
 
 
 class Examination(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+
+        def access_page(page):
+            if User.privilege == "admin":
+                controller.show_frame(page)
+
+            else:
+                messagebox.showerror("Access Denied!", "You dont have required permission to access this page")
+
+        def on_enter(e):
+            home_btn["image"] = gohomeBtnHover
+
+        def on_leave(e):
+            home_btn["image"] = gohomeicon
+
+        def on_enter1(e):
+            examination_btn["image"] = examinationBtnHover
+
+        def on_leave1(e):
+            examination_btn["image"] = examinationicon
+
+        def on_enter2(e):
+            library_btn["image"] = libraryBtnHover
+
+        def on_leave2(e):
+            library_btn["image"] = libraryicon
+        mainframe = tk.Frame(self, bg="#cdcfdc")
+        mainframe.pack(fill=BOTH, expand=True)
+
+        main_bg = ImageTk.PhotoImage(Image.open('final_event/images/checksum_school_bg.png').resize((1080, 620)))
+        gohomeicon = ImageTk.PhotoImage(Image.open('final_event/images/buttons/home_school.png'))
+        examinationicon = ImageTk.PhotoImage(Image.open('final_event/images/buttons/examination.png'))
+        libraryicon = ImageTk.PhotoImage(Image.open('final_event/images/buttons/library.png'))
+
+        gohomeBtnHover = ImageTk.PhotoImage(Image.open('final_event/images/buttons/home_school_hover.png'))
+        examinationBtnHover = ImageTk.PhotoImage(Image.open('final_event/images/buttons/examination_hover.png'))
+        libraryBtnHover = ImageTk.PhotoImage(Image.open('final_event/images/buttons/library_hover.png'))
+
+        goback = ImageTk.PhotoImage(Image.open('final_event/images/buttons/back button.png').resize((40, 40)))
+        gobackhover = ImageTk.PhotoImage(
+            Image.open('final_event/images/buttons/back button hover.png').resize((40, 40)))
+
+        main_bg_label = tk.Label(mainframe, image=main_bg, bg="#7b8c9a", borderwidth=0)
+        main_bg_label.image = main_bg
+        main_bg_label.place(x=0, y=0)
+
+        home_btn = tk.Button(mainframe, image=gohomeicon, bg="#7b8c9a", borderwidth=0,
+                             command=lambda: access_page(MainPage))
+        home_btn.image = gohomeicon
+        home_btn.place(x=170, y=190)
+
+        examination_btn = tk.Button(mainframe, image=examinationicon, bg="#7b8c9a", borderwidth=0,
+                                    command=lambda: controller.show_frame(Examination))
+        examination_btn.image = examinationicon
+        examination_btn.place(x=170, y=290)
+
+        library_btn = tk.Button(mainframe, image=libraryicon, bg="#7b8c9a", borderwidth=0,
+                                command=lambda: access_page(Lobby))
+        library_btn.image = libraryicon
+        library_btn.place(x=170, y=390)
+
+        back_Button = tk.Button(mainframe, image=goback, bg="#7c8d9a", borderwidth=0,
+                                command=lambda: controller.show_frame(LoginPage))
+        back_Button.image = goback
+        back_Button.place(x=5, y=5)
+
+        home_btn.bind("<Enter>", on_enter)
+        home_btn.bind("<Leave>", on_leave)
+
+        examination_btn.bind("<Enter>", on_enter1)
+        examination_btn.bind("<Leave>", on_leave1)
+
+        library_btn.bind("<Enter>", on_enter2)
+        library_btn.bind("<Leave>", on_leave2)
 
 class Library(tk.Frame):
     def __init__(self, parent, controller):

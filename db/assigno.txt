@@ -1,0 +1,12 @@
+introduction
+
+The growing reliance of organizations on digital technologies has made the protection of their information and communication technology (ICT) infrastructure and data a matter of utmost importance.
+Unauthorized intrusions such as hacking, malware, and phishing have the potential to compromise confidential data, interrupt business activities, and result in financial harm.
+This brings the need for organizations to implement various measures to safeguard their ICT infrastructure and data.This paper discusses such measures which can be taken by organizations to enhance their security. 
+
+1)Providing Security awareness training
+
+in kenya, many people are not aware of the security threats that they are facing espessially as online users.
+Security awareness training involves providing people with knowledge and skill to know and identify security threats and be able to prevent them.
+This training program is very important, as it eqips a person with the knowledge and skills to identify and prevent security threats. Again training creates a security concious culture and empower employees to protect orgaization's ICT infrastructure and data.
+ Security awareness training should cover topics such as password management, phishing attacks, social engineering, and data protection.

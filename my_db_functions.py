@@ -8,7 +8,7 @@ def add_student(first_name,middle_name,last_name,gNameFirst,gNameLast,guardian_p
     if not all([first_name, middle_name, last_name, gNameFirst, gNameLast, guardian_phone, current_class, enrolmentDay,
                 student_gender, age]):
         messagebox.showerror("Error", "Please fill in all the fields")
-        return
+        return "Please fill in all the fields"
     # # Directory name to check for
     dir_name = "db"
     # Check if the directory exists
@@ -41,6 +41,7 @@ def add_student(first_name,middle_name,last_name,gNameFirst,gNameLast,guardian_p
     conn.commit()
     cursor.close()
     print('done')
+    return 'saved'
 
 # add_student('ben','siloma','masikonde','stephen','leposo','0720275809','final','13-03-2023','male',21)
 
